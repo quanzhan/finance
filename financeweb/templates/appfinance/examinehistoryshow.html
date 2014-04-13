@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block "righttop"%}财务管理>>审批历史{% endblock %}
+{% block "contents" %}
+{% load getfinanceid %}
+<table class="table table-striped table-bordered table-condensed table-hover">
+<tr>
+    <th>编号</th>
+    <th style="width:10%">名称</th>
+    <th style="width:20%;">描述</th>
+    <th style="width:10%">申请人</th>
+    <th style="width:12%">申请日期</th>
+    <th>金额(元)</th>
+    <th style="">审核结果</th>
+    <th>审核意见</th>
+    <th>审核日期</th>
+</tr>
+{% if not objects %}
+<tr><td colspan="9">没有审批历史数据!</td></tr>
+{% endif %}
+{% for object in objects %}
+<tr>
+    <td>{{object.finance.financedate|get_financeid:object.finance.pk}}</td>
+    <td>{% if object.finance.financeimg %}<a href="#" onclick="return dialog_show('{% url "getattach" %}?imgpath={{object.finance.financeimg}}', '查看附件')" title="查看附件" >{{object.finance.financename}}</a>{%else%}{{object.finance.financename}}{% endif %}</td>
+    <td>{{object.finance.financeintro}}</td>
+    <td>{{object.finance.startperson.username}}</td>
+    <td>{{object.finance.financedate|date:"Y-m-d h:s"}}</td>
+    <td>{{object.finance.maneycount}}</td>
+    <td>{% if object.status%}通过{% else%}驳回{% endif %}</td>
+    <td>{{object.examineinfo}}</td>
+    <td>{{object.examinedate|date:"Y-m-d h:s"}}</td>
+</tr>
+</form>
+{% endfor %}
+<tr><td colspan="9" style="text-align:right;"><div style="margin-right:160px;">共{{objects.paginator.count}}条 当前{{objects.number}}/{{objects.paginator.num_pages}}页 {% if objects.has_previous %}<a href="?objectspage={{objects.previous_page_number}}">上一页</a>{% endif %} {% if objects.has_next %}<a href="?objectspage={{objects.next_page_number}}">下一页</a>{% endif %}
+跳转<select class="selectpicker"  style="width:50px;height:20px;margin-top:6px;"value="0" onchange="changepage('selectforexaminehistory')" id="selectforexaminehistory">
+    {% for page in objects.paginator.page_range %}
+    <option value="{{page}}" {% if objects.number == page %} selected="selected" {% endif %}>{{page}}</option>
+    {% endfor %}
+</select>页
+</div></td></tr>
+<tr><td colspan="9"><a href="{% url 'examineshow' %}">查看需审批数据</a></td></tr>
+</table>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block "righttop"%}财务管理>>我的提交{% endblock %}
+{% block "contents" %}
+{% load getfinanceid %}
+<script type="text/javascript">
+function deletefinance(financepk){
+    $.ajax({
+        url:"{% url 'deletefinance' %}",
+        type:'post',
+        data:{"financepk":financepk},
+        success:function(data){
+            if(data){
+            alert(data);
+            }
+            else{
+            window.location.reload();    
+            } 
+        }
+    });
+    return false;
+}
+</script>
+<h5>未完成({{objects|length}})：</h5>
+<table class="table table-striped table-bordered table-condensed table-hover">
+<tr><th style="width:10%">编号</th><th>名称</th><th>描述</th><th>申请人</th><th style="width:12%">申请日期</th><th>金额(元)</th><th>类型</th><th style="width:22%">审批状态</th></tr>
+{% for object in objects %}
+<tr>
+    <td>{{object.financedate|get_financeid:object.pk}}</td>
+    <td>{% if object.financeimg %}<a href="#" onclick="return dialog_show('{% url "getattach" %}?imgpath={{object.financeimg}}', '查看附件')" title="查看附件" >{{object.financename}}</a>{%else%}{{object.financename}}{% endif %}</td>
+    <td>{{object.financeintro}}</td>
+    <td>{{object.startperson.username}}</td>
+    <td>{{object.financedate|date:"Y-m-d h:s"}}</td>
+    <td>{{object.maneycount}}</td>
+    <td>{{object.get_financetype_display}}</td>
+    <td>
+    <ul class="top-notifications">
+        <li class="dropdown">
+    {%if object.status == 0 %}<font color="#ff8330">审批中</font>{%else%}{%if object.status == 1 %}<font color="#63a822">成功&#160;&#160;&#160;&#160;</font>{%else%}<font color="#db3535">驳回&#160;&#160;&#160;&#160;</font>{% endif %}{%endif%}
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#">查看详情</a>{% if object.status == -1 %}&#160;<a href="{% url 'makefinance' %}?financepk={{object.pk}}">重新提交</a>&nbsp;<a href="#" onclick="return deletefinance('{{object.pk}}')">删除单据</a>{% endif %}
+                <ul class="dropdown-menu" style="left:-200px;padding:0px;">
+        <table class="table table-striped table-bordered table-condensed table-hover">
+        <tr><td>审批人</td><td>审批结果</td><td>审批意见</td><td>审批时间</td></tr>
+        {% for person_set in object.financeuser_set.all %}
+           {% with person=person_set.user%} 
+            <tr><td>{{person.username}}</td><td>{%if person_set.status %}<font color="#63a822">通过</font>{% else %}<font color="#db3535">驳回</font>{% endif %}</td><td>{{person_set.examineinfo}}</td><td>{{person_set.examinedate|date:"Y-m-d h:s"}}</td></tr>
+           {% endwith %}
+        {% endfor%}
+        </table>
+                </ul>
+        </li>
+    </ul>
+    </td>
+</tr>
+{% endfor %}
+</table>
+<h5>已完成：</h5>
+<table class="table table-striped table-bordered table-condensed table-hover">
+<tr><th style="width:10%">编号</th><th>名称</th><th>描述</th><th>申请人</th><th style="width:12%">申请日期</th><th>金额(元)</th><th>类型</th><th style="width:22%">审批状态</th></tr>
+{% for object in completeobjects %}
+<tr>
+    <td>{{object.financedate|get_financeid:object.pk}}</td>
+    <td>{% if object.financeimg %}<a href="#" onclick="return dialog_show('{% url "getattach" %}?imgpath={{object.financeimg}}', '查看附件')" title="查看附件" >{{object.financename}}</a>{%else%}{{object.financename}}{% endif %}</td>
+    <td>{{object.financeintro}}</td>
+    <td>{{object.startperson.username}}</td>
+    <td>{{object.financedate|date:"Y-m-d h:s"}}</td>
+    <td>{{object.maneycount}}</td>
+    <td>{{object.get_financetype_display}}</td>
+    <td>
+    <ul class="top-notifications">
+        <li class="dropdown">
+    <font color="green">已领款</font>
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#">查看详情</a>{% if object.status == -1 %}&#160;<a href="{% url 'makefinance' %}?financepk={{object.pk}}">重新提交</a>&nbsp;<a href="#" onclick="return deletefinance('{{object.pk}}')">删除单据</a>{% endif %}
+                <ul class="dropdown-menu" style="left:-200px;padding:0px;">
+        <table class="table table-striped table-bordered table-condensed table-hover">
+        <tr><td>审批人</td><td>审批结果</td><td>审批意见</td><td>审批时间</td></tr>
+        {% for person_set in object.financeuser_set.all %}
+           {% with person=person_set.user%} 
+            <tr><td>{{person.username}}</td><td>{%if person_set.status %}<font color="#63a822">通过</font>{% else %}<font color="#db3535">驳回</font>{% endif %}</td><td>{{person_set.examineinfo}}</td><td>{{person_set.examinedate|date:"Y-m-d h:s"}}</td></tr>
+           {% endwith %}
+        {% endfor%}
+        </table>
+                </ul>
+        </li>
+    </ul>
+    </td>
+</tr>
+{% endfor %}
+<tr><td colspan="8" style="text-align:right;"><div style="margin-right:160px;">共{{completeobjects.paginator.count}}条 当前{{completeobjects.number}}/{{completeobjects.paginator.num_pages}}页 {% if completeobjects.has_previous %}<a href="?objectspage={{completeobjects.previous_page_number}}">上一页</a>{% endif %} {% if completeobjects.has_next %}<a href="?objectspage={{completeobjects.next_page_number}}">下一页</a>{% endif %}
+跳转<select class="selectpicker"  style="width:50px;height:20px;margin-top:6px;"value="0" onchange="changepage('selectforselffinance')" id="selectforselffinance">
+    {% for page in completeobjects.paginator.page_range %}
+    <option value="{{page}}" {% if completeobjects.number == page %} selected="selected" {% endif %}>{{page}}</option>
+    {% endfor %}
+</select>页
+
+</div></td></tr>
+</table>
+{% endblock %}

@@ -1,0 +1,5 @@
+<uwsgi>
+    <socket>127.0.0.1:8630</socket>
+    <chdir>/home/ubuntu/ManagementPlatform</chdir>
+    <module>financeweb.wsgi</module>
+</uwsgi>

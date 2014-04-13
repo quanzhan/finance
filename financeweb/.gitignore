@@ -1,0 +1,6 @@
+*.pyc
+*.swp
+*.pyo
+.DS_Store
+.coverage
+/static
